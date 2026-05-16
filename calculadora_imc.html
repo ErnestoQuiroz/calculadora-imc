@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de IMC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --white: #f0f0f0;
+      --gray: #1a1a1a;
+      --gray-mid: #2a2a2a;
+      --gray-light: #888;
+      --accent: #e8132a;
+
+      --color-bajo: #3b9ede;
+      --color-normal: #2ecc71;
+      --color-sobrepeso: #f39c12;
+      --color-obeso: #e8132a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* HEADER */
+    header {
+      padding: 1.5rem 3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.4rem; font-weight: 900; letter-spacing: .1em;
+    }
+    .logo span { color: var(--accent); }
+    .header-tag {
+      font-size: .75rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--gray-light);
+    }
+
+    /* MAIN */
+    main {
+      flex: 1;
+      display: grid; grid-template-columns: 1fr 1fr;
+      max-width: 1100px; margin: 0 auto; width: 100%;
+      padding: 4rem 2rem; gap: 4rem; align-items: start;
+    }
+
+    /* LEFT - FORM */
+    .form-section h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 900; text-transform: uppercase;
+      line-height: .95; margin-bottom: .8rem;
+    }
+    .form-section h1 span { color: var(--accent); }
+    .form-section .subtitle {
+      font-size: .9rem; color: var(--gray-light);
+      line-height: 1.6; margin-bottom: 2.5rem;
+    }
+
+    /* TOGGLE UNIDAD */
+    .unit-toggle {
+      display: flex; margin-bottom: 2rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      width: fit-content;
+    }
+    .unit-btn {
+      padding: .6rem 1.8rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .95rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      background: transparent; color: var(--gray-light);
+      border: none; cursor: pointer; transition: all .2s;
+    }
+    .unit-btn.active { background: var(--accent); color: var(--white); }
+
+    /* INPUTS */
+    .input-group { margin-bottom: 1.5rem; }
+    .input-label {
+      display: block; font-size: .75rem;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: var(--gray-light); margin-bottom: .6rem; font-weight: 500;
+    }
+    .input-row { display: flex; gap: .8rem; }
+    .input-wrap { flex: 1; position: relative; }
+    .input-field {
+      width: 100%; background: var(--gray-mid);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--white); padding: .9rem 3rem .9rem 1.2rem;
+      font-family: 'Barlow', sans-serif; font-size: 1.1rem; font-weight: 500;
+      outline: none; transition: border-color .2s;
+      -moz-appearance: textfield;
+    }
+    .input-field::-webkit-outer-spin-button,
+    .input-field::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .input-field:focus { border-color: var(--accent); }
+    .input-unit {
+      position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+      font-size: .8rem; color: var(--gray-light); letter-spacing: .05em;
+    }
+
+    /* SLIDER */
+    .slider-wrap { margin-top: .5rem; }
+    input[type="range"] {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 3px; background: var(--gray-mid); outline: none;
+      border-radius: 2px; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); cursor: pointer;
+      transition: transform .15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* BTN */
+    .calc-btn {
+      width: 100%; padding: 1.1rem;
+      background: var(--accent); color: var(--white); border: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      cursor: pointer; transition: background .2s, transform .15s;
+      margin-top: .5rem;
+    }
+    .calc-btn:hover { background: #c0101f; transform: translateY(-2px); }
+
+    /* RIGHT - RESULTADO */
+    .result-section {
+      position: sticky; top: 2rem;
+    }
+    .result-card {
+      background: var(--gray); padding: 3rem 2.5rem;
+      border: 1px solid rgba(255,255,255,0.07);
+      min-height: 420px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+
+    .result-empty {
+      text-align: center; color: var(--gray-light);
+    }
+    .result-empty .empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: .4; }
+    .result-empty p { font-size: .9rem; line-height: 1.6; }
+
+    .result-content { display: none; }
+    .result-content.visible { display: block; }
+    .result-empty.hidden { display: none; }
+
+    .result-label {
+      font-size: .75rem; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--gray-light); margin-bottom: .5rem;
+    }
+    .result-imc {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 6rem; font-weight: 900; line-height: 1;
+      margin-bottom: .3rem; transition: color .4s;
+    }
+    .result-categoria {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.8rem; font-weight: 700; text-transform: uppercase;
+      margin-bottom: 2rem; transition: color .4s;
+    }
+
+    /* BARRA IMC */
+    .imc-bar-wrap { margin-bottom: 2rem; }
+    .imc-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: .7rem; color: var(--gray-light);
+      letter-spacing: .08em; margin-bottom: .5rem;
+    }
+    .imc-bar {
+      height: 8px; border-radius: 4px;
+      background: linear-gradient(to right,
+        var(--color-bajo) 0%, var(--color-bajo) 25%,
+        var(--color-normal) 25%, var(--color-normal) 50%,
+        var(--color-sobrepeso) 50%, var(--color-sobrepeso) 75%,
+        var(--color-obeso) 75%, var(--color-obeso) 100%
+      );
+      position: relative;
+    }
+    .imc-indicator {
+      position: absolute; top: 50%; transform: translate(-50%, -50%);
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; border: 3px solid var(--black);
+      transition: left .5s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 0 0 2px white;
+    }
+
+    /* DATOS EXTRA */
+    .result-details {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1px; background: rgba(255,255,255,0.06);
+      margin-bottom: 2rem;
+    }
+    .detail-item {
+      background: var(--gray); padding: 1rem 1.2rem;
+    }
+    .detail-label { font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--gray-light); margin-bottom: .3rem; }
+    .detail-value { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 700; }
+
+    /* MENSAJE */
+    .result-msg {
+      font-size: .88rem; color: var(--gray-light);
+      line-height: 1.7; padding: 1.2rem;
+      border-left: 3px solid var(--accent);
+      background: rgba(255,255,255,0.03);
+    }
+
+    /* TABLA REFERENCIA */
+    .reference {
+      margin-top: 3rem; padding: 2rem;
+      background: var(--gray); border: 1px solid rgba(255,255,255,0.07);
+    }
+    .reference h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.2rem; font-weight: 700; text-transform: uppercase;
+      margin-bottom: 1.2rem; letter-spacing: .08em;
+    }
+    .ref-table { width: 100%; border-collapse: collapse; }
+    .ref-table td {
+      padding: .6rem .8rem; font-size: .82rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .ref-table td:last-child { text-align: right; font-weight: 500; }
+    .dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: .5rem; vertical-align: middle;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: .75rem; color: var(--gray-light); letter-spacing: .05em;
+    }
+
+    /* ANIMACION */
+    @keyframes popIn {
+      0% { transform: scale(.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop { animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      header { padding: 1rem 1.5rem; }
+      main { grid-template-columns: 1fr; padding: 2rem 1.5rem; gap: 2rem; }
+      .result-section { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">CALCU<span>IMC</span></div>
+    <div class="header-tag">Índice de Masa Corporal</div>
+  </header>
+
+  <main>
+    <!-- FORMULARIO -->
+    <div class="form-section">
+      <h1>Calcula tu<br><span>IMC</span></h1>
+      <p class="subtitle">Conoce tu índice de masa corporal y descubre si tu peso es saludable para tu estatura.</p>
+
+      <div class="unit-toggle">
+        <button class="unit-btn active" id="btn-metric" onclick="setUnit('metric')">Métrico (kg/cm)</button>
+        <button class="unit-btn" id="btn-imperial" onclick="setUnit('imperial')">Imperial (lb/ft)</button>
+      </div>
+
+      <!-- PESO -->
+      <div class="input-group">
+        <label class="input-label">Peso</label>
+        <div class="input-wrap">
+          <input class="input-field" type="number" id="peso" placeholder="70" min="1" max="300" oninput="syncSlider('peso')"/>
+          <span class="input-unit" id="peso-unit">kg</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-peso" min="1" max="200" value="70" oninput="syncInput('peso')"/>
+        </div>
+      </div>
+
+      <!-- ALTURA -->
+      <div class="input-group">
+        <label class="input-label">Altura</label>
+        <div class="input-row" id="altura-row-metric">
+          <div class="input-wrap">
+            <input class="input-field" type="number" id="altura-cm" placeholder="170" min="50" max="250" oninput="syncSlider('altura-cm')"/>
+            <span class="input-unit">cm</span>
+          </div>
+        </div>
+        <div class="input-row" id="altura-row-imperial" style="display:none">
+          <div class="input-wrap">
+            <input class="input-field" type="number" id="altura-ft" placeholder="5" min="1" max="8"/>
+            <span class="input-unit">ft</span>
+          </div>
+          <div class="input-wrap">
+            <input class="input-field" type="number" id="altura-in" placeholder="10" min="0" max="11"/>
+            <span class="input-unit">in</span>
+          </div>
+        </div>
+        <div class="slider-wrap" id="slider-altura-wrap">
+          <input type="range" id="slider-altura" min="50" max="220" value="170" oninput="syncInput('altura-cm')"/>
+        </div>
+      </div>
+
+      <!-- EDAD -->
+      <div class="input-group">
+        <label class="input-label">Edad</label>
+        <div class="input-wrap">
+          <input class="input-field" type="number" id="edad" placeholder="25" min="1" max="120"/>
+          <span class="input-unit">años</span>
+        </div>
+      </div>
+
+      <!-- SEXO -->
+      <div class="input-group">
+        <label class="input-label">Sexo</label>
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="btn-hombre" onclick="setSexo('hombre')">Hombre</button>
+          <button class="unit-btn" id="btn-mujer" onclick="setSexo('mujer')">Mujer</button>
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calcular()">Calcular IMC →</button>
+
+      <!-- TABLA REFERENCIA -->
+      <div class="reference">
+        <h3>Tabla de Referencia</h3>
+        <table class="ref-table">
+          <tr><td><span class="dot" style="background:var(--color-bajo)"></span>Bajo peso</td><td>Menos de 18.5</td></tr>
+          <tr><td><span class="dot" style="background:var(--color-normal)"></span>Peso normal</td><td>18.5 — 24.9</td></tr>
+          <tr><td><span class="dot" style="background:var(--color-sobrepeso)"></span>Sobrepeso</td><td>25.0 — 29.9</td></tr>
+          <tr><td><span class="dot" style="background:var(--color-obeso)"></span>Obesidad</td><td>30.0 o más</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div class="result-section">
+      <div class="result-card">
+        <div class="result-empty" id="result-empty">
+          <div class="empty-icon">⚖️</div>
+          <p>Ingresa tu peso y altura<br>para calcular tu IMC</p>
+        </div>
+
+        <div class="result-content" id="result-content">
+          <div class="result-label">Tu índice de masa corporal</div>
+          <div class="result-imc" id="result-imc">--</div>
+          <div class="result-categoria" id="result-categoria">--</div>
+
+          <div class="imc-bar-wrap">
+            <div class="imc-bar-label">
+              <span>Bajo peso</span>
+              <span>Normal</span>
+              <span>Sobrepeso</span>
+              <span>Obesidad</span>
+            </div>
+            <div class="imc-bar">
+              <div class="imc-indicator" id="imc-indicator" style="left:0%"></div>
+            </div>
+          </div>
+
+          <div class="result-details">
+            <div class="detail-item">
+              <div class="detail-label">Peso ideal</div>
+              <div class="detail-value" id="peso-ideal">--</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Diferencia</div>
+              <div class="detail-value" id="diferencia">--</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Peso mín. sano</div>
+              <div class="detail-value" id="peso-min">--</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Peso máx. sano</div>
+              <div class="detail-value" id="peso-max">--</div>
+            </div>
+          </div>
+
+          <div class="result-msg" id="result-msg"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Esta calculadora es solo orientativa. Consulta a un profesional de la salud para una evaluación completa.
+  </footer>
+
+  <script>
+    let unidad = 'metric';
+    let sexo = 'hombre';
+
+    function setUnit(u) {
+      unidad = u;
+      document.getElementById('btn-metric').classList.toggle('active', u === 'metric');
+      document.getElementById('btn-imperial').classList.toggle('active', u === 'imperial');
+      document.getElementById('peso-unit').textContent = u === 'metric' ? 'kg' : 'lb';
+      document.getElementById('altura-row-metric').style.display = u === 'metric' ? 'flex' : 'none';
+      document.getElementById('altura-row-imperial').style.display = u === 'imperial' ? 'flex' : 'none';
+      document.getElementById('slider-altura-wrap').style.display = u === 'metric' ? 'block' : 'none';
+      document.getElementById('slider-peso').max = u === 'metric' ? 200 : 440;
+      document.getElementById('peso').placeholder = u === 'metric' ? '70' : '154';
+    }
+
+    function setSexo(s) {
+      sexo = s;
+      document.getElementById('btn-hombre').classList.toggle('active', s === 'hombre');
+      document.getElementById('btn-mujer').classList.toggle('active', s === 'mujer');
+    }
+
+    function syncSlider(id) {
+      const val = document.getElementById(id).value;
+      if (id === 'peso') document.getElementById('slider-peso').value = val;
+      if (id === 'altura-cm') document.getElementById('slider-altura').value = val;
+    }
+
+    function syncInput(id) {
+      if (id === 'peso') {
+        document.getElementById('peso').value = document.getElementById('slider-peso').value;
+      }
+      if (id === 'altura-cm') {
+        document.getElementById('altura-cm').value = document.getElementById('slider-altura').value;
+      }
+    }
+
+    function calcular() {
+      let pesoKg, alturaMt;
+
+      if (unidad === 'metric') {
+        pesoKg = parseFloat(document.getElementById('peso').value);
+        const cm = parseFloat(document.getElementById('altura-cm').value);
+        alturaMt = cm / 100;
+      } else {
+        const lb = parseFloat(document.getElementById('peso').value);
+        pesoKg = lb * 0.453592;
+        const ft = parseFloat(document.getElementById('altura-ft').value) || 0;
+        const inc = parseFloat(document.getElementById('altura-in').value) || 0;
+        alturaMt = ((ft * 12) + inc) * 0.0254;
+      }
+
+      if (!pesoKg || !alturaMt || alturaMt < 0.5) {
+        alert('Por favor ingresa tu peso y altura correctamente.');
+        return;
+      }
+
+      const imc = pesoKg / (alturaMt * alturaMt);
+      const imcRedondeado = Math.round(imc * 10) / 10;
+
+      // Categoría y color
+      let categoria, color, msg;
+      if (imc < 18.5) {
+        categoria = 'Bajo Peso'; color = 'var(--color-bajo)';
+        msg = 'Tu peso está por debajo del rango saludable. Es importante consultar a un médico o nutriólogo para alcanzar un peso adecuado a través de una alimentación balanceada.';
+      } else if (imc < 25) {
+        categoria = 'Peso Normal'; color = 'var(--color-normal)';
+        msg = '¡Excelente! Tu peso se encuentra dentro del rango saludable. Mantén tus hábitos de alimentación y ejercicio para conservar este estado.';
+      } else if (imc < 30) {
+        categoria = 'Sobrepeso'; color = 'var(--color-sobrepeso)';
+        msg = 'Tu peso está ligeramente por encima del rango saludable. Pequeños cambios en tu alimentación y aumentar la actividad física pueden hacer una gran diferencia.';
+      } else {
+        categoria = 'Obesidad'; color = 'var(--color-obeso)';
+        msg = 'Tu peso está significativamente por encima del rango saludable. Se recomienda consultar con un médico para establecer un plan seguro y personalizado.';
+      }
+
+      // Peso ideal y rango
+      const pesoMin = Math.round(18.5 * alturaMt * alturaMt * 10) / 10;
+      const pesoMax = Math.round(24.9 * alturaMt * alturaMt * 10) / 10;
+      const pesoIdeal = sexo === 'hombre'
+        ? Math.round((22 * alturaMt * alturaMt) * 10) / 10
+        : Math.round((21 * alturaMt * alturaMt) * 10) / 10;
+      const diff = Math.round((pesoKg - pesoIdeal) * 10) / 10;
+      const diffText = diff > 0 ? `+${diff} kg` : `${diff} kg`;
+
+      // Posición en barra (IMC 10-40 → 0-100%)
+      const pos = Math.min(Math.max(((imc - 10) / 30) * 100, 2), 98);
+
+      // Mostrar resultado
+      document.getElementById('result-empty').classList.add('hidden');
+      const content = document.getElementById('result-content');
+      content.classList.add('visible');
+
+      const imcEl = document.getElementById('result-imc');
+      imcEl.textContent = imcRedondeado;
+      imcEl.style.color = color;
+      imcEl.classList.remove('pop');
+      void imcEl.offsetWidth;
+      imcEl.classList.add('pop');
+
+      const catEl = document.getElementById('result-categoria');
+      catEl.textContent = categoria;
+      catEl.style.color = color;
+
+      document.getElementById('imc-indicator').style.left = pos + '%';
+      document.getElementById('peso-ideal').textContent = pesoIdeal + ' kg';
+      document.getElementById('diferencia').textContent = diffText;
+      document.getElementById('peso-min').textContent = pesoMin + ' kg';
+      document.getElementById('peso-max').textContent = pesoMax + ' kg';
+      document.getElementById('result-msg').textContent = msg;
+      document.getElementById('result-msg').style.borderLeftColor = color;
+
+      // Scroll al resultado en móvil
+      if (window.innerWidth < 768) {
+        document.querySelector('.result-section').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Enter para calcular
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+  </script>
+</body>
+</html>
